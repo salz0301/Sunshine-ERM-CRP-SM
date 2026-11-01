@@ -134,10 +134,7 @@ function Sidebar({ collapsible, isMobile = false }) {
           // icon: <TeamOutlined />,
           label: <Link to={'/admin'}>{translate('admin')}</Link>,
         },
-        {
-          key: 'generalSettings',
-          label: <Link to={'/settings'}>{translate('general_settings')}</Link>,
-        },
+       
         {
           key: 'expensesCategory',
           label: <Link to={'/category/expenses'}>{translate('expenses_Category')}</Link>,
@@ -154,10 +151,7 @@ function Sidebar({ collapsible, isMobile = false }) {
           key: 'taxes',
           label: <Link to={'/taxes'}>{translate('taxes')}</Link>,
         },
-        {
-          key: 'about',
-          label: <Link to={'/about'}>{translate('about')}</Link>,
-        },
+        
         // {
         //   key: 'advancedSettings',
         //   label: <Link to={'/settings/advanced'}>{translate('advanced_settings')}</Link>,

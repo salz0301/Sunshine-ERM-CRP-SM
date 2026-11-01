@@ -21,7 +21,7 @@ const AuthModule = ({ authContent, AUTH_TITLE }) => {
           padding: '10px 20px',
         }}
       >
-        <SelectLanguage />
+        
       </Content>
       <Content
         style={{

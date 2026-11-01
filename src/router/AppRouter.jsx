@@ -25,7 +25,6 @@ const PaymentRead = lazy(() => import('@/pages/Payment/PaymentRead'));
 const PaymentUpdate = lazy(() => import('@/pages/Payment/PaymentUpdate'));
 const Employee = lazy(() => import('@/pages/Employee'));
 const Admin = lazy(() => import('@/pages/Admin'));
-const Settings = lazy(() => import('@/pages/Settings/Settings'));
 const PaymentMode = lazy(() => import('@/pages/PaymentMode'));
 const Taxes = lazy(() => import('@/pages/Taxes'));
 const Email = lazy(() => import('@/pages/Email/index'));
@@ -47,7 +46,6 @@ const Product = lazy(() => import('@/pages/Product'));
 const People = lazy(() => import('@/pages/People'));
 const Company = lazy(() => import('@/pages/Company'));
 
-const About = lazy(() => import('@/pages/About'));
 const Verify = lazy(() => import('@/pages/Verify'));
 
 export default function AppRouter() {
@@ -68,10 +66,7 @@ export default function AppRouter() {
       path: '/logout',
       element: <Logout />,
     },
-    {
-      path: '/about',
-      element: <About />,
-    },
+   
     {
       path: '/',
       element: <Dashboard />,
@@ -168,14 +163,8 @@ export default function AppRouter() {
       path: '/admin',
       element: <Admin />,
     },
-    {
-      path: '/settings',
-      element: <Settings />,
-    },
-    {
-      path: '/settings/edit/:settingsKey',
-      element: <Settings />,
-    },
+    
+    
     {
       path: '/payment/mode',
       element: <PaymentMode />,

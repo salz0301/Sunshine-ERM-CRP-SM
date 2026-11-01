@@ -16,7 +16,6 @@ import { useNavigate } from 'react-router-dom';
 import { BASE_URL } from '@/config/serverApiConfig';
 
 import useLanguage from '@/locale/useLanguage';
-import SelectLanguage from '@/components/SelectLanguage';
 
 import UpgradeButton from './UpgradeButton';
 
@@ -84,11 +83,7 @@ export default function HeaderContent() {
         </Link>
       ),
     },
-    {
-      icon: <SettingOutlined />,
-      key: 'settingApp',
-      label: <Link to={'/settings'}>{translate('app_settings')}</Link>,
-    },
+    
 
     {
       type: 'divider',
@@ -136,9 +131,9 @@ export default function HeaderContent() {
         {/* </Badge> */}
       </Dropdown>
 
-      <UpgradeButton />
+     
 
-      <SelectLanguage />
+     
     </Header>
   );
 }
