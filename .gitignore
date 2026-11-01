@@ -1,9 +1,25 @@
+# Dependencias
 node_modules/
-*.zip
-.DS_Store
-.idea
-notes.md
-.env.local
+**/node_modules/
 
-*.pdf
+# Variables de entorno
 .env
+.env.*
+!.env.example
+
+# Archivos temporales
+*.zip
+*.pdf
+.DS_Store
+.idea/
+notes.md
+
+# Archivos generados
+**/dist/
+**/build/
+**/coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
