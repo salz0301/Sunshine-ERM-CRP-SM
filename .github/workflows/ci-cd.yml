@@ -1,0 +1,137 @@
+name: Sunshine - CI/CD
+
+on:
+  push:
+    branches: [CICD]
+
+  pull_request:
+    branches: [CICD]
+
+  workflow_dispatch:
+
+concurrency:
+  group: sunshine-cicd
+  cancel-in-progress: false
+
+jobs:
+  construir-probar-publicar:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Descargar el proyecto
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+
+        with:
+          node-version: '22'
+          cache: npm
+
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Compilar el frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Probar el backend
+        working-directory: backend
+
+        run: |
+          npm ci
+          npm test
+
+      - name: Construir imagen Docker
+        run: docker build --platform linux/amd64 -t sunshine:test .
+
+      - name: Probar imagen con PostgreSQL
+        run: |
+          docker network create sunshine-ci
+
+          docker run -d \
+            --name db-ci \
+            --network sunshine-ci \
+            -e POSTGRES_DB=sunshine \
+            -e POSTGRES_USER=sunshine \
+            -e POSTGRES_PASSWORD=clave_temporal_ci \
+            postgres:16-alpine
+
+          timeout 90 bash -c 'until docker exec db-ci pg_isready -h 127.0.0.1 -U sunshine -d sunshine >/dev/null; do sleep 2; done'
+
+          docker run -d \
+            --name app-ci \
+            --network sunshine-ci \
+            -p 8080:3001 \
+            -e DATABASE_URL=postgresql://sunshine:clave_temporal_ci@db-ci:5432/sunshine \
+            -e JWT_SECRET=ClaveTemporalParaCI123456789012345678901234 \
+            -e ADMIN_USER=admin \
+            -e ADMIN_PASSWORD=ClaveTemporalCI123 \
+            -e ADMIN_NAME='Prueba CI' \
+            -e ADMIN_EMAIL=admin@example.test \
+            -e SEED_DEMO=false \
+            sunshine:test
+
+          timeout 90 bash -c 'until curl -fsS http://localhost:8080/api/salud >/dev/null; do sleep 2; done'
+
+          curl -fsS http://localhost:8080/ | grep -q 'id="root"'
+
+          curl -fsS \
+            -o /dev/null \
+            -X POST http://localhost:8080/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d '{"username":"admin","password":"ClaveTemporalCI123"}'
+
+      - name: Mostrar errores de los contenedores
+        if: failure()
+
+        run: |
+          docker logs app-ci || true
+          docker logs db-ci || true
+
+      - name: Acceder a GitHub Container Registry
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/CICD'
+
+        uses: docker/login-action@v3
+
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publicar imagen
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/CICD'
+
+        run: |
+          IMAGE=ghcr.io/salz0301/sunshine-erm-crp-sm
+
+          docker tag sunshine:test "$IMAGE:latest"
+          docker tag sunshine:test "$IMAGE:sha-${GITHUB_SHA::7}"
+
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:sha-${GITHUB_SHA::7}"
+
+      - name: Solicitar despliegue en Render
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/CICD'
+
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo 'La imagen se publicó. Aún falta configurar RENDER_DEPLOY_HOOK_URL.'
+            exit 0
+          fi
+
+          curl -fsS \
+            -X POST \
+            -o /dev/null \
+            "$RENDER_DEPLOY_HOOK_URL"
+
+          echo 'Render recibió la solicitud. Revise el resultado en Render.'

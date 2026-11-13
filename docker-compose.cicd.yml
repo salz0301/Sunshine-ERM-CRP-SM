@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+
+    environment:
+      POSTGRES_DB: sunshine
+      POSTGRES_USER: sunshine
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:?Defina LOCAL_DB_PASSWORD}
+
+    volumes:
+      - sunshine_cicd_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -h 127.0.0.1 -U sunshine -d sunshine
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+
+    ports:
+      - '127.0.0.1:8080:3001'
+
+    environment:
+      DATABASE_URL: postgresql://sunshine:${LOCAL_DB_PASSWORD}@db:5432/sunshine
+      JWT_SECRET: ${LOCAL_JWT_SECRET:?Defina LOCAL_JWT_SECRET}
+
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: ${LOCAL_ADMIN_PASSWORD:?Defina LOCAL_ADMIN_PASSWORD}
+      ADMIN_NAME: Administradora Sunshine
+      ADMIN_EMAIL: admin@sunshine.local
+
+      SEED_DEMO: 'false'
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  sunshine_cicd_data:
